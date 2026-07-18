@@ -46,7 +46,7 @@ The current configured date window is `2025-01-01` to `2026-07-14`.
 ## Run
 
 ```bash
-python main.py
+python scripts/collect_data.py
 ```
 
 For each station, the pipeline:
