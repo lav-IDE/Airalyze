@@ -1,26 +1,47 @@
-# AQI Forecasting — Data Collection Pipeline
+# AQI Forecasting Data Pipeline
 
-Pulls the data described in Decision 5 of the project doc: CPCB (primary),
-OpenAQ (automated backup), Open-Meteo (weather).
+Data collection and feature-building pipeline for a Delhi AQI forecasting prototype.
 
-## What's actually automated
+## Sources
 
-| Source | Automated? | Needs |
-|---|---|---|
-| Open-Meteo (weather) | ✅ Fully | nothing — no key |
-| OpenAQ (PM2.5/AQI, backup) | ✅ Fully | free API key |
-| CPCB CCR dashboard (primary) | ❌ Manual export | 5 min per station, see `cpcb.py` |
+| Source | Automated? | Used for |
+|---|---:|---|
+| CPCB manual export | Manual | Primary pollutant + station weather data |
+| OpenAQ | Automatic fallback | PM2.5 when local CPCB files are missing |
+| Open-Meteo | Automatic fallback | Weather when CPCB weather columns are missing |
 
-**Why CPCB isn't a one-command scraper:** see `cpcb.py`'s docstring for
-the full reasoning + step-by-step manual export path (short version: no
-documented bulk API, session-based Angular dashboard, not worth fighting).
+CPCB historical exports are not committed to git. Put local exports in `data_raw/`.
 
 ## Setup
 
 ```bash
 pip install -r requirements.txt
-export OPENAQ_API_KEY="your_key_here"   # free: https://explore.openaq.org/register
+copy .env.example .env
 ```
+
+Then add your OpenAQ key to `.env` if you want the OpenAQ fallback:
+
+```bash
+OPENAQ_API_KEY=your_key_here
+```
+
+## Expected Local CPCB Files
+
+The current station pair is Anand Vihar and Mandir Marg. The pipeline accepts either naming style:
+
+```text
+data_raw/anand_vihar_cpcb.csv
+data_raw/mandir_marg_cpcb.csv
+```
+
+or:
+
+```text
+data_raw/cpcb_Anand_Vihar.csv
+data_raw/cpcb_Mandir_Marg.csv
+```
+
+The current configured date window is `2025-01-01` to `2026-07-14`.
 
 ## Run
 
@@ -28,35 +49,30 @@ export OPENAQ_API_KEY="your_key_here"   # free: https://explore.openaq.org/regis
 python main.py
 ```
 
-This will, for each station in `config.py`:
-1. Pull historical hourly weather from Open-Meteo → `data_raw/weather_<station>.csv`
-2. Auto-discover the nearest OpenAQ monitoring location and pull PM2.5 → `data_raw/openaq_<station>.csv`
-3. Merge the two into `data_raw/merged_<station>.csv`
+For each station, the pipeline:
 
-If OpenAQ coverage is thin near a station (common — India's OpenAQ density
-varies), do the manual CPCB export (`cpcb.py` docstring) and re-run:
+1. Reuses local CPCB exports when present.
+2. Otherwise pulls hourly weather from Open-Meteo and tries OpenAQ PM2.5.
+3. Writes `data_raw/merged_<station>.csv`.
+4. Writes `data_raw/features_<station>.csv`.
 
-```python
-import cpcb, merge
-cpcb_df = cpcb.load_manual_export("data_raw/cpcb_Anand_Vihar.csv", station_name="Anand Vihar")
-weather_df = ...  # already saved from main.py run
-merged = merge.merge_station_data(weather_df, cpcb_df, "Anand Vihar")
-```
+## Training Features
 
-## Before feeding into model training
+`features_<station>.csv` includes aligned pollutant/weather columns plus:
 
-`merged_<station>.csv` has raw aligned weather + pollutant columns.
-You still need to compute, per Decision 7's confirmed feature set:
-- `pm25_lag_1h`, `pm25_lag_24h`
-- `aqi_lag_1h`, `aqi_lag_24h`, `aqi_lag_168h`
+- `pm25_lag_1h`
+- `pm25_lag_24h`
+- `aqi_lag_1h`
+- `aqi_lag_24h`
+- `aqi_lag_168h`
 
-Do this as a separate feature-engineering step (`df.groupby('station')['pm25'].shift(...)`),
-**after** this merge — not inside these scrapers — to keep the leakage-avoidance
-logic in one auditable place.
+AQI is estimated from PM2.5 when CPCB does not provide an AQI column.
 
-## Stations
+## GitHub Notes
 
-Currently configured for **Anand Vihar** (traffic corridor, high pollution)
-vs. **Lodhi Road** (comparatively green, South Delhi) — see `config.py` for
-the reasoning and coordinates. Swap if you find better data quality
-elsewhere; Decision 3 says pick by data quality first, contrast second.
+Ignored on purpose:
+
+- `.env`
+- `.venv/`
+- `__pycache__/`
+- generated/raw files under `data_raw/`
