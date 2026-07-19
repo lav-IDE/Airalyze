@@ -5,3 +5,6 @@ __pycache__/
 
 data_raw/*
 !data_raw/.gitkeep
+
+artifacts/*
+!artifacts/.gitkeep
