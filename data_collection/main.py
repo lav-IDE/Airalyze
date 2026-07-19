@@ -117,6 +117,8 @@ def build_station_dataset(station):
         return False
 
     merged = merge.merge_station_data(weather_df, pollutant_df, name)
+    merged = merge.regularize_hourly_data(merged)
+    merged = merge.drop_all_missing_columns(merged)
     merged = merge.add_festival_flag(merged, FESTIVAL_DATES)
     merged = open_meteo.add_circular_wind_encoding(merged)
     merged = merge.add_pm25_aqi_estimate(merged)
@@ -126,6 +128,9 @@ def build_station_dataset(station):
     print(f"  -> saved {merged_path} ({len(merged)} rows)")
 
     features = merge.add_lag_features(merged)
+    features = merge.add_forecast_targets(features)
+    features = merge.add_missingness_features(features)
+    features = merge.causally_impute_features(features)
     features_path = Path(config.OUTPUT_DIR) / f"features_{station_slug(name)}.csv"
     features.to_csv(features_path, index=False)
     print(f"  -> saved {features_path} ({len(features)} rows)")
