@@ -10,8 +10,6 @@ from . import openaq
 
 
 FESTIVAL_DATES = [
-    "2023-11-12",  # Diwali 2023
-    "2024-11-01",  # Diwali 2024
     "2025-10-21",  # Diwali 2025
 ]
 

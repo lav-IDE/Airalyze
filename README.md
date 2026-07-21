@@ -2,7 +2,7 @@
 
 Airalyze is a Delhi air-quality forecasting prototype built for smart-city intervention use cases. It prepares hourly CPCB station data for Anand Vihar and Mandir Marg, handles missing readings and time gaps, and forecasts estimated AQI one hour and 24 hours ahead.
 
-The project uses CPCB pollutant and weather exports as its primary data source, engineers time, weather, pollutant-lag, and missingness features, then compares multiple machine-learning models against a persistence baseline using a chronological holdout period. The best-performing model is saved as a reusable artifact and can return frontend-ready predictions containing station, forecast AQI, AQI category, forecast time, model name, and an uncertainty interval.
+The project uses CPCB pollutant and weather exports as its primary data source, engineers time, weather, pollutant-lag, and missingness features, then compares multiple machine-learning models against a leakage-safe chronological holdout period. The selected model is saved as a reusable artifact and can return frontend-ready predictions with station, forecast AQI, AQI category, timestamps, model name, uncertainty, and transparent operational suggestions.
 
 Current AQI values are a PM2.5-based proxy because the available CPCB exports do not include official multi-pollutant CPCB AQI. Airalyze is therefore a forecasting MVP: it demonstrates station-level pollution forecasting and provides a foundation for a future live-data backend, dashboard, hotspot alerts, and intervention recommendations.
 
@@ -89,14 +89,21 @@ python scripts/train_forecast.py --horizon-hours 1
 python scripts/train_forecast.py --horizon-hours 24
 ```
 
-Each run uses a chronological holdout period and compares a persistence
-baseline with HistGradientBoosting, RandomForest, and ExtraTrees. The lowest
-RMSE ML model is saved under `artifacts/` together with evaluation metrics.
-Artifacts are ignored by git.
+Each run excludes training rows whose future label falls in the chronological
+holdout period. It compares a persistence baseline with HistGradientBoosting,
+RandomForest, and a compact, depth-bounded ExtraTrees candidate. The lowest-RMSE
+ML model is saved under `artifacts/` with a JSON report containing overall,
+per-station, and AQI-category error metrics plus compressed artifact size.
+It also writes a small Markdown comparison table (`*_report.md`) for the
+README/hackathon demo.
+Artifacts are ignored by git, so compare the newly generated report with the
+previous large ExtraTrees artifact before deployment.
 
 For a backend, load an artifact and pass one or more feature rows to
 `forecasting.service.predict`. It returns JSON-ready station, forecast AQI,
-AQI band, horizon, confidence interval, model name, and forecast timestamp.
+AQI band, horizon, confidence interval, model name, data timestamp, forecast
+timestamp, and rule-based operational suggestions. Recommendations are
+operational suggestions only; they do not establish intervention effects.
 
 Print the latest saved forecast for both stations in the terminal:
 
@@ -105,6 +112,27 @@ python scripts/test_forecast.py
 python scripts/test_forecast.py --model-path artifacts/aqi_forecast_24h.joblib
 python scripts/test_forecast.py --station "Anand Vihar"
 ```
+
+## Prototype API
+
+After training a model, start the JSON-only API:
+
+```bash
+uvicorn forecasting.api:app
+```
+
+It exposes `GET /health`, `GET /forecast/latest`, and `GET /forecast/{station}`.
+It loads one artifact at startup (the 1-hour artifact by default). Configure it
+using `AIRALYZE_MODEL_PATH`, `AIRALYZE_DATA_DIR`, and
+`AIRALYZE_HORIZON_HOURS`; the configured horizon must match the artifact.
+
+## Model limitations
+
+The target is a PM2.5-derived proxy, not official multi-pollutant CPCB AQI;
+AQI-category metrics therefore measure proxy-band agreement only. The confidence
+interval is a residual-RMSE heuristic, not a calibrated prediction interval.
+Local raw CPCB exports and model artifacts are unversioned, so metrics and size
+tradeoffs cannot be reproduced without those files.
 
 ## Missing Data
 
@@ -128,3 +156,66 @@ Ignored on purpose:
 - `.venv/`
 - `__pycache__/`
 - generated/raw files under `data_raw/`
+
+# Airalyze Backend
+
+Backend API for the Airalyze AQI Prediction System.
+
+## Features
+
+- FastAPI backend
+- Ward-wise AQI forecasting
+- Health advisory API
+- JWT authentication
+- SQLAlchemy database integration
+
+## Project Structure
+
+```
+backend/
+├── app/
+│   ├── routers/
+│   ├── schemas/
+│   ├── services/
+│   ├── database.py
+│   ├── models.py
+│   └── main.py
+├── requirements.txt
+└── README.md
+```
+
+## Installation
+
+```bash
+python -m venv .venv
+```
+
+Activate the virtual environment.
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Environment Variables
+
+Create a `.env` file:
+
+```env
+JWT_SECRET=your_secret_key
+JWT_EXPIRE_MINUTES=240
+```
+
+## Running
+
+From the project root:
+
+```bash
+uvicorn backend.app.main:app --reload
+```
+
+## Notes
+
+- The trained model (`artifacts/aqi_forecast_1h.joblib`) is not included in this repository.
+- Add the model manually before running the forecast endpoints.

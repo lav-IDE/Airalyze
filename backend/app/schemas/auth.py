@@ -2,7 +2,13 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
-
+class SignupRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    designation: str
+    assigned_ward: str
+    
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
