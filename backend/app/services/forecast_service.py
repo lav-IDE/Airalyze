@@ -40,6 +40,12 @@ def _get_artifact():
         raise RuntimeError("Forecast model is unavailable") from exc
 
 
+def _station_metrics(artifact, model_name, station):
+    """Use station metrics when present; older saved artifacts only have overall metrics."""
+    metrics = artifact["metrics"][model_name]
+    return metrics.get("per_station", {}).get(station, metrics)
+
+
 def get_forecast(ward_id: str):
     station = STATION_MAP.get(ward_id)
 
@@ -59,14 +65,14 @@ def get_forecast(ward_id: str):
 
     forecast = result[0]
     forecast["recent_actuals"] = recent_actuals(ROOT / "data_raw", station=station)
-    model_metrics = artifact["metrics"][artifact["model_name"]]["per_station"][station]
-    baseline_metrics = artifact["metrics"]["persistence_aqi_lag_1h"]["per_station"][station]
+    model_metrics = _station_metrics(artifact, artifact["model_name"], station)
+    baseline_metrics = _station_metrics(artifact, "persistence_aqi_lag_1h", station)
     model_rmse = float(model_metrics["rmse"])
     baseline_rmse = float(baseline_metrics["rmse"])
     forecast["accuracy_metrics"] = {
         "model_rmse": round(model_rmse, 1),
         "baseline_rmse": round(baseline_rmse, 1),
-        "improvement_percent": round((baseline_rmse - model_rmse) * 100 / baseline_rmse, 1),
+        "improvement_percent": round((baseline_rmse - model_rmse) * 100 / baseline_rmse, 1) if baseline_rmse else 0.0,
         "training_window_days": TRAINING_WINDOW_DAYS,
     }
     return forecast
