@@ -4,7 +4,7 @@
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "/api").replace(/\/$/, "");
 const REQUEST_TIMEOUT_MS = 12_000;
 
-async function request(path) {
+async function request(path, options = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -12,6 +12,7 @@ async function request(path) {
     const response = await fetch(`${API_BASE}${path}`, {
       signal: controller.signal,
       headers: { Accept: "application/json" },
+      ...options,
     });
     const payload = await response.json().catch(() => null);
 
@@ -43,6 +44,10 @@ export async function getWards() {
   return request("/wards/");
 }
 
-export async function getAdvisory(wardId) {
-  return request(`/advisory/${encodeURIComponent(wardId)}`);
+export async function getAdvisory(wardId, userProfile) {
+  return request(`/advisory/${encodeURIComponent(wardId)}`, {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify({ user_profile: userProfile }),
+  });
 }

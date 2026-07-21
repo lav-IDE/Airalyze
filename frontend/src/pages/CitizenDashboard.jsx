@@ -18,7 +18,6 @@ const WARD_STORAGE_KEY = "urbanair:selected-ward";
 
 export default function Dashboard() {
   const [selectedWardId, setSelectedWardId] = useState(() => localStorage.getItem(WARD_STORAGE_KEY));
-  const [language, setLanguage] = useState("English");
   const [wards, setWards] = useState([]);
   const [forecast, setForecast] = useState(null);
   const [forecastError, setForecastError] = useState(null);
@@ -119,8 +118,6 @@ export default function Dashboard() {
           <AdvisoryCard
             ward={selectedWard}
             forecast={forecast}
-            language={language}
-            setLanguage={setLanguage}
           />
 
         </div>
