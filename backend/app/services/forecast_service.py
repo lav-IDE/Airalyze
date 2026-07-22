@@ -32,7 +32,10 @@ def _get_artifact():
         raise RuntimeError("Forecast model is unavailable") from _artifact_error
 
     try:
-        _artifact = load_forecaster(ROOT / "artifacts" / "aqi_forecast_1h.joblib")
+        model_path = os.getenv("AIRALYZE_MODEL_PATH", "artifacts/aqi_forecast_24h.joblib")
+        if not Path(model_path).is_absolute():
+            model_path = ROOT / model_path
+        _artifact = load_forecaster(model_path)
         return _artifact
     except Exception as exc:
         _artifact_error = exc

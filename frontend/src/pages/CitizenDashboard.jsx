@@ -75,7 +75,7 @@ export default function Dashboard() {
 
         {!selectedWard ? (
           <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900 p-10 text-center text-slate-300">
-            Select your ward to view its current 1-hour AQI forecast, health advisory, and model drivers.
+            Select your ward to view its current 24-hour AQI forecast, health advisory, and model drivers.
           </div>
         ) : <>
         <div className="space-y-6">

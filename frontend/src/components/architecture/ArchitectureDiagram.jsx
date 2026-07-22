@@ -30,7 +30,7 @@ const steps = [
   },
   {
     title: "Forecast Model",
-    subtitle: "1-hour AQI prediction",
+    subtitle: "24-hour AQI prediction",
     icon: BrainCircuit,
     color: "text-red-400",
   },

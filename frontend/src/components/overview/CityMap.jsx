@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 
-function Sparkline({ points, prediction }) {
+function Sparkline({ points, prediction, horizon = 24 }) {
   const actualValues = points?.map((point) => point.aqi).filter(Number.isFinite) ?? [];
   const values = [...actualValues, prediction].filter(Number.isFinite);
   if (actualValues.length < 2 || !Number.isFinite(prediction)) return null;
@@ -20,9 +20,9 @@ function Sparkline({ points, prediction }) {
   return (
     <div className="mt-5">
       <div className="mb-1 flex justify-between text-xs text-white/70">
-        <span>Last {values.length - 1} hours actual</span><span>+1h forecast</span>
+        <span>Last {values.length - 1} hours actual</span><span>+{horizon}h forecast</span>
       </div>
-      <svg viewBox="0 0 100 32" preserveAspectRatio="none" className="h-12 w-full overflow-visible" aria-label="Recent actual AQI and one-hour forecast">
+      <svg viewBox="0 0 100 32" preserveAspectRatio="none" className="h-12 w-full overflow-visible" aria-label={`Recent actual AQI and ${horizon}-hour forecast`}>
         <polyline points={actualCoordinates} fill="none" stroke="#ffffff" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         <line x1={lastActual.split(",")[0]} y1={lastActual.split(",")[1]} x2={predictedX} y2={predictedY} stroke="#22d3ee" strokeWidth="2" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
         {actualValues.map((value, index) => { const [x, y] = pointFor(value, index, values.length).split(","); return <circle key={index} cx={x} cy={y} r="2" fill="#ffffff" vectorEffect="non-scaling-stroke" />; })}
@@ -94,7 +94,7 @@ export default function CityMap({ ward, forecast, error, isLoading, advisory }) 
               {forecast?.aqi_band ?? (error ? "Temporarily unavailable" : "Loading…")}
             </p>
 
-            {forecast && <Sparkline points={forecast.recent_actuals} prediction={forecast.forecast_aqi} />}
+            {forecast && <Sparkline points={forecast.recent_actuals} prediction={forecast.forecast_aqi} horizon={forecast.horizon_hours} />}
             {forecast?.accuracy_metrics && <div className="mt-5 grid grid-cols-3 gap-2 border-t border-white/20 pt-4 text-center text-white"><div><p className="text-xs text-white/70">Model RMSE</p><p className="font-semibold">{forecast.accuracy_metrics.model_rmse}</p></div><div><p className="text-xs text-white/70">Baseline RMSE</p><p className="font-semibold">{forecast.accuracy_metrics.baseline_rmse}</p></div><div><p className="text-xs text-white/70">Improvement</p><p className="font-semibold">{forecast.accuracy_metrics.improvement_percent}%</p></div></div>}
             {forecast?.accuracy_metrics && <p className="mt-3 text-xs text-white/65">Trained on {forecast.accuracy_metrics.training_window_days} days of CPCB station data.</p>}
           </div>

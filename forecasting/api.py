@@ -9,9 +9,9 @@ from .service import latest_feature_rows, load_forecaster, predict
 
 
 def create_app():
-    model_path = os.getenv("AIRALYZE_MODEL_PATH", "artifacts/aqi_forecast_1h.joblib")
+    model_path = os.getenv("AIRALYZE_MODEL_PATH", "artifacts/aqi_forecast_24h.joblib")
     data_dir = os.getenv("AIRALYZE_DATA_DIR", "data_raw")
-    configured_horizon = int(os.getenv("AIRALYZE_HORIZON_HOURS", "1"))
+    configured_horizon = int(os.getenv("AIRALYZE_HORIZON_HOURS", "24"))
 
     @asynccontextmanager
     async def lifespan(app):
