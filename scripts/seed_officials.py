@@ -9,9 +9,9 @@ from backend.app.models import MunicipalOfficial
 from backend.app.routers.auth import password_context
 
 OFFICIALS = [
-    ("Aditi Sharma", "anand.officer@urbanair.demo", "Ward Officer", "anand_vihar"),
-    ("Rahul Verma", "mandir.officer@urbanair.demo", "Ward Officer", "mandir_marg"),
-    ("Neha Kapoor", "zonal.head@urbanair.demo", "Zonal Head", "anand_vihar"),
+    ("Aditi Sharma", "anand.officer@airalyze.demo", "Ward Officer", "anand_vihar"),
+    ("Rahul Verma", "mandir.officer@airalyze.demo", "Ward Officer", "mandir_marg"),
+    ("Neha Kapoor", "zonal.head@airalyze.demo", "Zonal Head", "anand_vihar"),
 ]
 DEMO_PASSWORD = "Demo@123"
 

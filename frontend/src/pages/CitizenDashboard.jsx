@@ -14,7 +14,7 @@ import AdvisoryCard from "@/components/advisory/AdvisoryCard";
 
 import { getForecast, getWards } from "@/services/api";
 
-const WARD_STORAGE_KEY = "urbanair:selected-ward";
+const WARD_STORAGE_KEY = "airalyze:selected-ward";
 
 export default function Dashboard() {
   const [selectedWardId, setSelectedWardId] = useState(() => localStorage.getItem(WARD_STORAGE_KEY));
@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [forecast, setForecast] = useState(null);
   const [forecastError, setForecastError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [advisory, setAdvisory] = useState(null);
 
   useEffect(() => {
     getWards().then((loadedWards) => {
@@ -37,6 +38,7 @@ export default function Dashboard() {
     if (!selectedWardId) {
       setForecast(null);
       setForecastError(null);
+      setAdvisory(null);
       setIsLoading(false);
       return;
     }
@@ -44,6 +46,7 @@ export default function Dashboard() {
     setIsLoading(true);
     setForecast(null);
     setForecastError(null);
+    setAdvisory(null);
     getForecast(selectedWardId)
       .then((result) => { if (!cancelled) setForecast(result); })
       .catch((error) => { if (!cancelled) setForecastError(error.message || "Forecast temporarily unavailable"); })
@@ -77,17 +80,18 @@ export default function Dashboard() {
         ) : <>
         <div className="space-y-6">
           <CityMap
-    ward={selectedWard}
-    forecast={forecast}
-    error={forecastError}
-    isLoading={isLoading}
-/>
+            ward={selectedWard}
+            forecast={forecast}
+            error={forecastError}
+            isLoading={isLoading}
+            advisory={advisory}
+          />
           <AQISummary
-    forecast={forecast}
-    selectedWard={selectedWard.name}
-    error={forecastError}
-    isLoading={isLoading}
-/>
+            forecast={forecast}
+            selectedWard={selectedWard.name}
+            error={forecastError}
+            isLoading={isLoading}
+          />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -118,8 +122,9 @@ export default function Dashboard() {
           <AdvisoryCard
             ward={selectedWard}
             forecast={forecast}
+            advisory={advisory}
+            setAdvisory={setAdvisory}
           />
-
         </div>
 
         <ArchitectureDiagram />

@@ -32,7 +32,7 @@ function Sparkline({ points, prediction }) {
   );
 }
 
-export default function CityMap({ ward, forecast, error, isLoading }) {
+export default function CityMap({ ward, forecast, error, isLoading, advisory }) {
 
   const getColor = (status) => {
     switch (status) {
@@ -64,6 +64,16 @@ export default function CityMap({ ward, forecast, error, isLoading }) {
         <p className="text-slate-400 text-sm mt-1">
           Live forecast from the backend
         </p>
+
+        {advisory?.is_published && (
+          <div className="mt-4 p-4 bg-cyan-950 border border-cyan-850 text-cyan-200 rounded-xl flex items-start gap-3 shadow-lg border-l-4 border-l-cyan-400">
+            <span className="text-xl mt-0.5">📢</span>
+            <div>
+              <p className="font-semibold text-cyan-300">Airalyze AI Alert</p>
+              <p className="text-sm mt-1 text-cyan-100">{advisory.app.advisory_text}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div>

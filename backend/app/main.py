@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.database import Base, engine
+from backend.app import models
 from backend.app.routers import wards, forecast, advisory, auth
 
 app = FastAPI(

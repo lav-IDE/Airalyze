@@ -51,3 +51,18 @@ export async function getAdvisory(wardId, userProfile) {
     body: JSON.stringify({ user_profile: userProfile }),
   });
 }
+
+export async function publishAdvisory(wardId, language, profile, text) {
+  return request(`/advisory/publish`, {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ward_id: wardId,
+      language: language,
+      age_group: profile.age_group,
+      health_condition: profile.health_conditions[0],
+      activity: profile.activity,
+      advisory_text: text,
+    }),
+  });
+}

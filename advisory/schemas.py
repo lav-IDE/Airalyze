@@ -97,3 +97,4 @@ class AdvisoryResponse(BaseModel):
     ivr: IVRAdvisory
     risk_level: RiskLevel
     language: Language
+    is_published: bool = False
